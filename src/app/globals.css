@@ -1,0 +1,200 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Fiber Optic Text Animation */
+.logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.word-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 120px;
+  position: relative;
+  margin: 0 20px;
+}
+
+.greenflux {
+  font-size: 4.5rem;
+  font-weight: bold;
+  letter-spacing: 6px;
+}
+
+.energy {
+  font-size: 3.5rem;
+  font-weight: bold;
+  letter-spacing: 8px;
+}
+
+.letter {
+  display: inline-block;
+  color: #1a1a1a;
+  position: relative;
+  border-bottom: 3px solid #333;
+  animation: fiberPulse 4s infinite;
+}
+
+.letter::before {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #1e782b, #f1ab19, #e48519, transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: fiberLight 4s infinite;
+}
+
+/* GreenFlux letter delays */
+.greenflux .letter:nth-child(1) { animation-delay: 0s; }
+.greenflux .letter:nth-child(2) { animation-delay: 0.2s; }
+.greenflux .letter:nth-child(3) { animation-delay: 0.4s; }
+.greenflux .letter:nth-child(4) { animation-delay: 0.6s; }
+.greenflux .letter:nth-child(5) { animation-delay: 0.8s; }
+.greenflux .letter:nth-child(6) { animation-delay: 1.0s; }
+.greenflux .letter:nth-child(7) { animation-delay: 1.2s; }
+.greenflux .letter:nth-child(8) { animation-delay: 1.4s; }
+.greenflux .letter:nth-child(9) { animation-delay: 1.6s; }
+
+/* Energy letter delays - start after GreenFlux */
+.energy .letter:nth-child(1) { animation-delay: 2.0s; }
+.energy .letter:nth-child(2) { animation-delay: 2.2s; }
+.energy .letter:nth-child(3) { animation-delay: 2.4s; }
+.energy .letter:nth-child(4) { animation-delay: 2.6s; }
+.energy .letter:nth-child(5) { animation-delay: 2.8s; }
+.energy .letter:nth-child(6) { animation-delay: 3.0s; }
+
+@keyframes fiberLight {
+  0%, 20% { transform: scaleX(0); }
+  30%, 60% { transform: scaleX(1); }
+  70%, 100% { transform: scaleX(0); }
+}
+
+@keyframes fiberPulse {
+  0%, 70% {
+    color: #1a1a1a;
+    text-shadow: none;
+  }
+  15% {
+    color: #1e782b;
+    text-shadow: 0 0 15px #1e782b, 0 0 30px #1e782b;
+  }
+  30% {
+    color: #f1ab19;
+    text-shadow: 0 0 15px #f1ab19, 0 0 30px #f1ab19;
+  }
+  45% {
+    color: #e48519;
+    text-shadow: 0 0 15px #e48519, 0 0 30px #e48519;
+  }
+  60% {
+    color: #f1ab19;
+    text-shadow: 0 0 15px #f1ab19, 0 0 30px #f1ab19;
+  }
+}
+
+/* Responsive design for fiber optic text */
+@media (max-width: 1024px) {
+  .greenflux {
+    font-size: 3.5rem;
+    letter-spacing: 5px;
+  }
+  .energy {
+    font-size: 2.8rem;
+    letter-spacing: 6px;
+  }
+  .word-container {
+    height: 100px;
+    margin: 0 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .greenflux {
+    font-size: 2.8rem;
+    letter-spacing: 4px;
+  }
+  .energy {
+    font-size: 2.2rem;
+    letter-spacing: 5px;
+  }
+  .word-container {
+    height: 80px;
+    margin: 0 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .greenflux {
+    font-size: 2.2rem;
+    letter-spacing: 2px;
+  }
+  .energy {
+    font-size: 1.8rem;
+    letter-spacing: 3px;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #10b981, #3b82f6);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #059669, #2563eb);
+}
+
+/* Glow effects */
+.glow-green {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Text glow */
+.text-glow {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Backdrop blur support */
+@supports (backdrop-filter: blur(10px)) {
+  .backdrop-blur-custom {
+    backdrop-filter: blur(10px);
+  }
+}
