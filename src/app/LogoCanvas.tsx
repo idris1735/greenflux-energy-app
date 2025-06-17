@@ -148,6 +148,7 @@ export default function LogoCanvas() {
 
     function createInitialParticles(scale: number) {
       const baseParticleCount = 7000
+      if (!canvas) return
       const particleCount = Math.floor(baseParticleCount * Math.sqrt((canvas.width * canvas.height) / (1920 * 1080)))
       for (let i = 0; i < particleCount; i++) {
         const particle = createParticle(scale)
