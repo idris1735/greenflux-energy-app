@@ -1,182 +1,351 @@
-"use client"
+"use client";
+import { useState, useEffect } from "react";
+import { getAllProducts, getSellerProfile } from "@/lib/firebaseHelpers";
+import { ProductCard } from "@/app/components/product-card";
+import { 
+  Search, 
+  Filter, 
+  Grid, 
+  List,
+  SlidersHorizontal,
+  Star,
+  MapPin,
+  TrendingUp
+} from "lucide-react";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Sparkles, Package, Zap, Clock, Send } from "lucide-react"
-import Footer from "../components/footer"
+interface Product {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  images?: string[];
+  rating?: number;
+  review_count?: number;
+  seller_id?: string;
+  seller_name?: string;
+  seller_verified?: boolean;
+  seller_logo?: string;
+  location?: string;
+  category?: string;
+  tags?: string[];
+  views_count?: number;
+  status?: string;
+  created_at: any;
+}
 
 export default function MarketplacePage() {
-  const [email, setEmail] = useState("")
-  const [submitted, setSubmitted] = useState(false)
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000000 });
+  const [sortBy, setSortBy] = useState("newest");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Here you would typically handle the email subscription
-    setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 3000)
+  const categories = [
+    "Solar Panels",
+    "Inverters", 
+    "Batteries",
+    "Charge Controllers",
+    "Mounting Systems",
+    "Accessories"
+  ];
+
+  const sortOptions = [
+    { value: "newest", label: "Newest First" },
+    { value: "oldest", label: "Oldest First" },
+    { value: "price_low", label: "Price: Low to High" },
+    { value: "price_high", label: "Price: High to Low" },
+    { value: "rating", label: "Highest Rated" },
+    { value: "popular", label: "Most Popular" }
+  ];
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  useEffect(() => {
+    filterAndSortProducts();
+  }, [products, searchTerm, selectedCategory, priceRange, sortBy]);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const productsData = await getAllProducts(50);
+      
+      // Fetch seller profiles for all products
+      const productsWithSellers = await Promise.all(
+        productsData.map(async (product: any) => {
+          if (product.seller_id) {
+            try {
+              const sellerProfile = await getSellerProfile(product.seller_id);
+              return {
+                ...product,
+                seller_name: sellerProfile?.business_name || sellerProfile?.company_name || 'Unknown Seller',
+                seller_verified: sellerProfile?.is_verified || false,
+                seller_logo: sellerProfile?.company_logo_url || '',
+                seller_id: product.seller_id
+              } as Product;
+            } catch (error) {
+              console.error('Error fetching seller profile:', error);
+              return {
+                ...product,
+                seller_name: 'Unknown Seller',
+                seller_verified: false,
+                seller_logo: '',
+                seller_id: product.seller_id
+              } as Product;
+            }
+          }
+          return product as Product;
+        })
+      );
+      
+      setProducts(productsWithSellers);
+    } catch (error) {
+      console.error('Error loading products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterAndSortProducts = () => {
+    let filtered = [...products];
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(product =>
+        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.tags?.some((tag: string) => 
+          tag.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    }
+
+    // Category filter
+    if (selectedCategory) {
+      filtered = filtered.filter(product => 
+        product.category === selectedCategory
+      );
+    }
+
+    // Price range filter
+    filtered = filtered.filter(product => 
+      product.price >= priceRange.min && product.price <= priceRange.max
+    );
+
+    // Sort
+    switch (sortBy) {
+      case "newest":
+        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+      case "oldest":
+        filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        break;
+      case "price_low":
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case "price_high":
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case "rating":
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        break;
+      case "popular":
+        filtered.sort((a, b) => (b.views_count || 0) - (a.views_count || 0));
+        break;
+    }
+
+    setFilteredProducts(filtered);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("");
+    setPriceRange({ min: 0, max: 1000000 });
+    setSortBy("newest");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading marketplace...</p>
+        </div>
+      </div>
+    );
   }
 
-  const features = [
-    {
-      icon: Package,
-      title: "Premium Solar Products",
-      description: "Curated selection of top-tier solar panels, inverters, and batteries from leading manufacturers."
-    },
-    {
-      icon: Zap,
-      title: "Smart Energy Solutions",
-      description: "Advanced monitoring systems and smart home integration for optimal energy management."
-    },
-    {
-      icon: Clock,
-      title: "Express Installation",
-      description: "Quick and professional installation services across Nigeria, backed by warranty."
-    }
-  ]
-
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#0a1833] to-[#1a365d] text-white">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-green-500/30 to-yellow-500/30"
-            animate={{
-              opacity: [0.2, 0.3, 0.2],
-              scale: [1, 1.1, 1]
-            }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
-          />
+    <div className="min-h-screen bg-gray-50 pt-20">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Solar Marketplace</h1>
+          <p className="text-gray-600 text-lg">
+            Discover high-quality solar products from trusted sellers across Nigeria
+          </p>
         </div>
 
-        {/* Content */}
-        <div className="relative max-w-6xl mx-auto px-4 py-24 sm:py-32">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center"
-          >
-            <motion.div
-              className="flex items-center justify-center mb-6"
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <Sparkles className="w-12 h-12 text-yellow-400" />
-            </motion.div>
-            
-            <h1 className="text-4xl sm:text-6xl font-bold mb-6 bg-gradient-to-r from-green-400 to-yellow-400 bg-clip-text text-transparent">
-              Something Big is Coming
-            </h1>
-            
-            <p className="text-xl sm:text-2xl text-gray-300 max-w-3xl mx-auto mb-8">
-              We're building Nigeria's first premium marketplace for solar energy products. 
-              Get ready to transform your energy future.
-            </p>
-
-            {/* Countdown Timer */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto mb-12">
-              {["30", "12", "45", "10"].map((number, index) => (
-                <motion.div
-                  key={index}
-                  className="bg-white/10 backdrop-blur-lg rounded-xl p-4"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <div className="text-3xl sm:text-4xl font-bold text-yellow-400">{number}</div>
-                  <div className="text-sm text-gray-400">{["Days", "Hours", "Minutes", "Seconds"][index]}</div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Newsletter Signup */}
-            <div className="max-w-md mx-auto">
-              <form onSubmit={handleSubmit} className="relative">
+        {/* Search and Filters */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            {/* Search */}
+            <div className="lg:col-span-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
-                  type="email"
-                  placeholder="Enter your email for early access"
-                  className="w-full px-6 py-4 rounded-full bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 backdrop-blur-lg"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  placeholder="Search products, categories, or tags..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-2 px-4 py-2 bg-gradient-to-r from-green-500 to-yellow-500 rounded-full hover:from-green-600 hover:to-yellow-600 transition-all duration-300"
-                >
-                  <Send className="w-5 h-5" />
-                </button>
-              </form>
-              {submitted && (
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-green-400 mt-2"
-                >
-                  Thank you! We'll keep you updated.
-                </motion.p>
-              )}
+              </div>
             </div>
-          </motion.div>
-        </div>
-      </section>
 
-      {/* Features Preview */}
-      <section className="relative py-16 sm:py-24">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.2 }}
-                className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300"
+            {/* Category Filter */}
+            <div>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-500/20 to-yellow-500/20 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-yellow-400" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-gray-400">{feature.description}</p>
-              </motion.div>
-            ))}
+                <option value="">All Categories</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sort */}
+            <div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Price Range and View Mode */}
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">Price Range:</span>
+              <input
+                type="number"
+                placeholder="Min"
+                value={priceRange.min}
+                onChange={(e) => setPriceRange(prev => ({ ...prev, min: Number(e.target.value) }))}
+                className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <span className="text-gray-400">-</span>
+              <input
+                type="number"
+                placeholder="Max"
+                value={priceRange.max}
+                onChange={(e) => setPriceRange(prev => ({ ...prev, max: Number(e.target.value) }))}
+                className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded-lg transition-colors ${
+                  viewMode === "grid" 
+                    ? "bg-green-100 text-green-600" 
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <Grid className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 rounded-lg transition-colors ${
+                  viewMode === "list" 
+                    ? "bg-green-100 text-green-600" 
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <List className="w-5 h-5" />
+              </button>
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* Teaser Stats */}
-      <section className="relative py-16 sm:py-24 bg-black/20">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
-            {[
-              { number: "500+", label: "Products Coming" },
-              { number: "24/7", label: "Support Ready" },
-              { number: "100%", label: "Quality Assured" },
-              { number: "30+", label: "Brand Partners" }
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.5 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="space-y-2"
-              >
-                <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-green-400 to-yellow-400 bg-clip-text text-transparent">
-                  {stat.number}
-                </div>
-                <div className="text-gray-400">{stat.label}</div>
-              </motion.div>
-            ))}
+        {/* Results Summary */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <span className="text-gray-600">
+              Showing {filteredProducts.length} of {products.length} products
+            </span>
+            {(searchTerm || selectedCategory || priceRange.min > 0 || priceRange.max < 1000000) && (
+              <span className="text-sm text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                Filtered Results
+              </span>
+            )}
           </div>
         </div>
-      </section>
 
-      <Footer />
-    </main>
-  )
+        {/* Products Grid */}
+        {filteredProducts.length === 0 ? (
+          <div className="text-center py-12">
+            <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
+            <p className="text-gray-600 mb-4">
+              Try adjusting your search criteria or browse all products
+            </p>
+            <button
+              onClick={clearFilters}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
+        ) : (
+          <div className={`grid gap-6 ${
+            viewMode === "grid" 
+              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
+              : "grid-cols-1"
+          }`}>
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                className={viewMode === "list" ? "flex" : ""}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Load More */}
+        {filteredProducts.length > 0 && filteredProducts.length < products.length && (
+          <div className="text-center mt-8">
+            <button className="bg-white hover:bg-gray-50 text-gray-700 px-8 py-3 rounded-lg border border-gray-300 font-medium transition-colors">
+              Load More Products
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 } 

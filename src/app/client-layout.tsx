@@ -1,0 +1,6 @@
+"use client";
+import { UserProvider } from "../lib/UserContext";
+
+export default function ClientLayout({ children }: { children: React.ReactNode }) {
+  return <UserProvider>{children}</UserProvider>;
+} 

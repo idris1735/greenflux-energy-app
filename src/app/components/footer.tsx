@@ -59,8 +59,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/products" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Products
+                <Link href="/installers" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Find Installers
                 </Link>
               </li>
               <li>

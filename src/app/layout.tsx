@@ -1,6 +1,8 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Navbar from './components/navbar'
+import ClientLayout from './client-layout'
+import GraceChat from './components/GraceChat';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,8 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Navbar />
-        {children}
+        <ClientLayout>
+          <Navbar />
+          {children}
+          <GraceChat />
+
+        </ClientLayout>
       </body>
     </html>
   )

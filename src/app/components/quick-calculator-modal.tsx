@@ -69,17 +69,17 @@ export function QuickCalculatorModal() {
 
   return (
     <>
-      <Button 
-        variant="outline" 
-        className="w-full md:w-auto border-green-500/20 hover:border-green-500/40 text-sm py-1.5"
+      <button
+        type="button"
+        className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-full font-semibold border border-gray-700 hover:bg-gray-700 transition-colors"
         onClick={() => {
           setOpen(true)
           resetCalculator()
         }}
       >
-        <Calculator className="w-3.5 h-3.5 mr-1.5" />
+        <Calculator className="w-5 h-5" />
         Solar Calculator
-      </Button>
+      </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="w-[95vw] max-w-[500px] p-4 sm:p-6 bg-black/50 border-white/10">
