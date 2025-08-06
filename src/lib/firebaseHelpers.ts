@@ -530,3 +530,49 @@ export async function deleteImageByPath(path: string): Promise<void> {
     console.error('Error deleting image:', error);
   }
 } 
+
+/**
+ * Fetch a product by ID and join seller info as a nested object.
+ * Returns the canonical product model for UI/components.
+ */
+export async function getProductWithSeller(productId: string) {
+  const productRef = doc(db, "products", productId);
+  const productSnap = await getDoc(productRef);
+  if (!productSnap.exists()) return null;
+  const product = { id: productSnap.id, ...productSnap.data() };
+  let seller = null;
+  if (product.seller_id) {
+    const sellerSnap = await getDoc(doc(db, "sellers", product.seller_id));
+    if (sellerSnap.exists()) {
+      seller = { id: sellerSnap.id, ...sellerSnap.data() };
+    }
+  }
+  return {
+    ...product,
+    seller,
+  };
+} 
+
+/**
+ * Fetch all products and join seller info for each.
+ * Returns an array of canonical product models for UI/components.
+ */
+export async function getAllProductsWithSellers(limitCount: number = 20) {
+  const productsCol = collection(db, "products");
+  const q = query(productsCol, limit(limitCount));
+  const snap = await getDocs(q);
+  const products = await Promise.all(
+    snap.docs.map(async docSnap => {
+      const product = { id: docSnap.id, ...docSnap.data() };
+      let seller = null;
+      if (product.seller_id) {
+        const sellerSnap = await getDoc(doc(db, "sellers", product.seller_id));
+        if (sellerSnap.exists()) {
+          seller = { id: sellerSnap.id, ...sellerSnap.data() };
+        }
+      }
+      return { ...product, seller };
+    })
+  );
+  return products;
+} 

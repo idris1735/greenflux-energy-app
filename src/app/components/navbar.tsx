@@ -44,7 +44,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-xl border-b border-green-500/20">
+    <nav className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-xl border-b border-green-500/20 sticky">
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -101,6 +101,16 @@ export default function Navbar() {
               Solutions
             </Link>
             <Link 
+              href="/home" 
+              className={`text-sm transition-colors ${
+                pathname === "/home" 
+                  ? "text-white" 
+                  : "text-gray-300 hover:text-white"
+              }`}
+            >
+              Home
+            </Link>
+            <Link 
               href="/installers" 
               className={`text-sm transition-colors ${
                 pathname === "/installers" 
@@ -132,6 +142,7 @@ export default function Navbar() {
             </Link>
           </div>
 
+          {/* Desktop nav actions */}
           <div className="hidden md:flex items-center gap-4">
             <QuickCalculatorModal />
             <Link href="/marketplace" className="flex items-center gap-2 bg-gradient-to-r from-green-400 to-yellow-400 text-black px-4 py-2 rounded-full font-semibold hover:from-green-500 hover:to-yellow-500">
@@ -209,6 +220,17 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Solutions
+              </Link>
+              <Link 
+                href="/home" 
+                className={`text-sm transition-colors ${
+                  pathname === "/home" 
+                    ? "text-white" 
+                    : "text-gray-300 hover:text-white"
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Home
               </Link>
               <Link 
                 href="/installers" 

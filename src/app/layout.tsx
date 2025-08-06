@@ -1,31 +1,29 @@
-import { Inter } from 'next/font/google'
-import './globals.css'
-import Navbar from './components/navbar'
-import ClientLayout from './client-layout'
-import GraceChat from './components/GraceChat';
+"use client";
 
-const inter = Inter({ subsets: ['latin'] })
+import { Inter } from "next/font/google";
+import { usePathname } from "next/navigation";
+import "./globals.css";
+import Navbar from "./components/navbar";
+import { CartProvider } from "../lib/CartContext";
 
-export const metadata = {
-  title: 'GreenFlux Energy',
-  description: 'Sustainable Energy Solutions',
-}
+const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isMarketplace = pathname === "/";
+
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ClientLayout>
-          <Navbar />
+        <CartProvider>
+          {!isMarketplace && <Navbar />}
           {children}
-          <GraceChat />
-
-        </ClientLayout>
+        </CartProvider>
       </body>
     </html>
-  )
+  );
 }
